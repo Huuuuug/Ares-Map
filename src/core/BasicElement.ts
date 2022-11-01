@@ -37,6 +37,13 @@ export abstract class BasicElement {
     this.onZoomEnd()
     return this
   }
+  /** 将元素从地图移除 */
+  remove() {
+    if (!this._map) return
+    this._map.delete(this.name)
+    this._map = undefined
+    return this
+  }
 
   /** 地图平移时的回调 */
   onMove() {}

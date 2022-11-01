@@ -30,7 +30,7 @@ export interface AresMapOption {
 export class AresMap {
   private _option: AresMapOption = {
     show: true,
-    center: [0, 0],
+    center: [120, 30],
     zoom: 7,
     zoomDelta: 1,
     zoomDuring: 200,
@@ -119,7 +119,7 @@ export class AresMap {
       scaleY: -scale,
     })
   }
-  /** 添加元素 */
+  /** 地图添加指定元素 */
   add(ele: BasicElement) {
     if (!this.elements.has(ele.name)) {
       this.elements.set(ele.name, ele)
@@ -130,5 +130,13 @@ export class AresMap {
         throw new Error(`已存在同名要素`)
       }
     }
+  }
+  /** 地图删除指定元素 */
+  delete(name: string) {
+    const ele = this.elements.get(name)
+    if (!ele) return
+    this.elements.delete(name)
+    this.root.remove(ele.root)
+    ele.remove()
   }
 }
