@@ -32,11 +32,45 @@ export class TileLayer extends BasicElement {
   constructor(name: string, option: Partial<TileLayerOption>) {
     super(name)
     Object.assign(this._option, option)
-    this._updateTile = antiShake(this._updateTile.bind(this), 100, false)
-    this._updateTile()
+    this.onMove = antiShake(this.onMove.bind(this), 100, false)
   }
-  /** 更新瓦片 */
-  private _updateTile() {
+  /** 缩放后重置瓦片 */
+  onZoomEnd() {
+    if (!this._map) return
+    const map = this._map
+    let zoom = Math.round(map.zoom)
+    if (zoom < this._option.minZoom) {
+      zoom = this._option.minZoom
+    } else if (zoom > this._option.maxZoom) {
+      zoom = this._option.maxZoom
+    }
+    /** 瓦片图缩放倍数 */
+    const magnification = Math.pow(2, zoom)
+    const size = map.size
+    const screenLeftBottom = tileMapping
+      .forward([-map.root.x / map.root.scaleX, -map.root.y / map.root.scaleY])
+      .map(e => Math.floor(e * magnification))
+    const screenRightTop = tileMapping
+      .forward([(size.x - map.root.x) / map.root.scaleX, (size.y - map.root.y) / map.root.scaleY])
+      .map(e => Math.ceil(e * magnification))
+
+    /** 延迟移除旧图 */
+    const waitRemove: ZImage[] = []
+    this._tileIndex.forEach(image => {
+      waitRemove.push(image)
+    })
+    this._tileIndex.clear()
+    if (waitRemove.length > 0) {
+      setTimeout(() => {
+        waitRemove.forEach((e: ZImage) => {
+          this.root.remove(e)
+        })
+      }, 100)
+    }
+    this._generateTile(screenLeftBottom, screenRightTop, zoom)
+  }
+  /** 平移后更新瓦片 */
+  onMove() {
     const map = this._map!
     let zoom = Math.round(map.zoom)
     if (zoom < this._option.minZoom) {
@@ -44,27 +78,49 @@ export class TileLayer extends BasicElement {
     } else if (zoom > this._option.maxZoom) {
       zoom = this._option.maxZoom
     }
+    /** 瓦片图缩放倍数 */
     const magnification = Math.pow(2, zoom)
     const size = map.size
-    const min = tileMapping
+    const screenLeftBottom = tileMapping
       .forward([-map.root.x / map.root.scaleX, -map.root.y / map.root.scaleY])
       .map(e => Math.floor(e * magnification))
-    const max = tileMapping
+    const screenRightTop = tileMapping
       .forward([(size.x - map.root.x) / map.root.scaleX, (size.y - map.root.y) / map.root.scaleY])
       .map(e => Math.ceil(e * magnification))
-    console.log(map.root.y / map.root.scaleY)
-
-    min[1] = Math.max(0, min[1])
-    max[1] = Math.min(magnification, max[1])
-    const tileSize = (2 * MAX) / magnification
-    const { url, subdomains } = this._option
     this._tileIndex.forEach((image, key) => {
       const [x, y] = key.split('-').map(e => Number.parseInt(e))
-      if (x < min[0] || x > max[0] || y < min[1] || y > max[1]) {
+      if (
+        x < screenLeftBottom[0] ||
+        x > screenRightTop[0] ||
+        y < screenLeftBottom[1] ||
+        y > screenRightTop[1]
+      ) {
         this.root.remove(image)
         this._tileIndex.delete(key)
       }
     })
+    this._generateTile(screenLeftBottom, screenRightTop, zoom)
+  }
+  /**
+   * 生成新的瓦片
+   * @param min
+   * @param max
+   * @param zoom 缩放等级
+   */
+  private _generateTile(min: number[], max: number[], zoom: number) {
+    /** 瓦片图缩放倍数 */
+    const magnification = Math.pow(2, zoom)
+    min[1] = Math.max(0, min[1])
+    max[1] = Math.min(magnification, max[1])
+    const tileSize = (2 * MAX) / magnification
+    const { url, subdomains } = this._option
+    // this._tileIndex.forEach((image, key) => {
+    //   const [x, y] = key.split('-').map(e => Number.parseInt(e))
+    //   if (x < min[0] || x > max[0] || y < min[1] || y > max[1]) {
+    //     this.root.remove(image)
+    //     this._tileIndex.delete(key)
+    //   }
+    // })
     /** 添加新的瓦片 */
     for (let y = min[1]; y < max[1]; y++) {
       const _y = MAX - tileSize * y
@@ -107,6 +163,4 @@ export class TileLayer extends BasicElement {
       }
     }
   }
-  /** 生成新的瓦片 */
-  private _generateTile() {}
 }

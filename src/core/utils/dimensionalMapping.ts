@@ -9,6 +9,7 @@ export class OneDimensional {
   }
   /** 从from映射到to */
   forward(x: number) {
+    // console.log(x)
     return this.k * x + this.b
   }
   /** 从to映射到from */

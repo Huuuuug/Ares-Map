@@ -1,4 +1,4 @@
-import { Circle, Group, init, Rect, ZRenderType } from 'zrender'
+import { Circle, ElementEvent, Group, init, Rect, ZRenderType } from 'zrender'
 import { BasicElement } from './BasicElement'
 import { Projection } from './tools/Projection'
 
@@ -57,6 +57,9 @@ export class AresMap {
   get zoom() {
     return Math.log2(this.root.scaleX / Projection.SCALE_UNIT)
   }
+  get show() {
+    return this._option.show
+  }
   constructor(dom: HTMLDivElement, option: Partial<AresMapOption> = {}) {
     Object.assign(this._option, option)
 
@@ -83,8 +86,15 @@ export class AresMap {
     }
     this.zr.add(this.root)
     ;(window as any).zr = this.zr
-
     this.setView(this._option.center[0], this._option.center[1], this._option.zoom)
+    this.handleMouseMove = this.handleMouseMove.bind(this)
+    this.handleMouseUp = this.handleMouseUp.bind(this)
+    if (this._option.moveable) {
+      this.zr.on('mousedown', this._onMouseDown, this)
+    }
+    if (this._option.zoomable) {
+      this.zr.on('mousewheel', this._onMouseWheel, this)
+    }
   }
 
   /** 替换dom中保留的元素 */
@@ -99,6 +109,14 @@ export class AresMap {
     _temp.forEach(e => {
       dom.appendChild(e)
     })
+  }
+  /** 鼠标按下 */
+  private _onMouseDown(e: ElementEvent) {
+    document.addEventListener('mousemove', this.handleMouseMove)
+    document.addEventListener('mouseup', this.handleMouseUp)
+  }
+  private _onMouseWheel(e: ElementEvent) {
+    this.handleMouseWheel(e)
   }
   /**
    * 设置当前视图
@@ -119,7 +137,10 @@ export class AresMap {
       scaleY: -scale,
     })
   }
-  /** 地图添加指定元素 */
+  /**
+   * 地图添加指定元素
+   * @param ele
+   */
   add(ele: BasicElement) {
     if (!this.elements.has(ele.name)) {
       this.elements.set(ele.name, ele)
@@ -131,12 +152,36 @@ export class AresMap {
       }
     }
   }
-  /** 地图删除指定元素 */
+  /**
+   * 地图删除指定元素
+   * @param name
+   * @returns
+   */
   delete(name: string) {
     const ele = this.elements.get(name)
     if (!ele) return
     this.elements.delete(name)
     this.root.remove(ele.root)
     ele.remove()
+  }
+  /**
+   * 鼠标移动 动态修改地图内所有元素
+   * @param e
+   */
+  handleMouseMove(e: MouseEvent) {
+    if (Number.isFinite(e.movementX) && Number.isFinite(e.movementY)) {
+      this.root.attr({
+        x: this.root.x + e.movementX,
+        y: this.root.y + e.movementY,
+      })
+      this.elements.forEach((ele: BasicElement) => ele.onMove())
+    }
+  }
+  handleMouseUp() {
+    document.removeEventListener('mousemove', this.handleMouseMove)
+    document.removeEventListener('mouseup', this.handleMouseUp)
+  }
+  handleMouseWheel(e: ElementEvent) {
+    console.log(e)
   }
 }
