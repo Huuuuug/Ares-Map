@@ -32,8 +32,8 @@ export class AresMap {
     show: true,
     center: [120, 30],
     zoom: 7,
-    zoomDelta: 1,
-    zoomDuring: 200,
+    zoomDelta: 0.5,
+    zoomDuring: 300,
     minZoomLevel: 3,
     maxZoomLevel: 18,
     dpi: window.devicePixelRatio,
@@ -182,6 +182,28 @@ export class AresMap {
     document.removeEventListener('mouseup', this.handleMouseUp)
   }
   handleMouseWheel(e: ElementEvent) {
-    console.log(e)
+    let delta = e.wheelDelta * this._option.zoomDelta
+    const { zoom } = this
+    delta = Math.min(this._option.maxZoomLevel, Math.max(this._option.minZoomLevel - zoom, delta))
+    if (!delta) return
+    /** 瓦片图缩放倍数 */
+    const magnification = Math.pow(2, delta)
+    this.elements.forEach((e: BasicElement) => {
+      e.onZoomStart && e.onZoomStart()
+    })
+    this.root
+      .animate('', false)
+      .when(this._option.zoomDuring, {
+        x: e.offsetX + (this.root.x - e.offsetX) * magnification,
+        y: e.offsetY + (this.root.y - e.offsetY) * magnification,
+        scaleX: this.root.scaleX * magnification,
+        scaleY: this.root.scaleY * magnification,
+      })
+      .start()
+      .done(() => {
+        this.elements.forEach((e: BasicElement) => {
+          e.onZoomEnd && e.onZoomEnd()
+        })
+      })
   }
 }
