@@ -3,13 +3,14 @@
 </template>
 <script lang="ts" setup>
 import { AresMap } from '@/core/AresMap'
-import { TileLayer, Boundary } from '@/core/Index'
+import { TileLayer, Boundary, Point } from '@/core/Index'
 import { onMounted, ref } from 'vue'
 import geo from '@/assets/json/zhejiangcitys.json'
 import { Feature } from 'geojson'
 let map: AresMap
 let tileLayer: TileLayer
 let boundary: Boundary
+let point: Point
 const mapRef = ref<HTMLDivElement | null>(null)
 onMounted(() => {
   map = new AresMap(mapRef.value!)
@@ -26,6 +27,7 @@ onMounted(() => {
       return { color: feature.properties!.color, z: feature.properties!.z }
     },
   })
+  point = new Point([120, 30])
   boundary.setData(geo as any)
   tileLayer.addTo(map)
   boundary.addTo(map)
