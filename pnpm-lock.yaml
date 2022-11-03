@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@types/geojson': ^7946.0.10
   '@types/node': ^18.7.23
   '@types/nprogress': ^0.2.0
   '@typescript-eslint/eslint-plugin': ^5.38.1
@@ -33,6 +34,7 @@ dependencies:
   zrender: 5.4.0
 
 devDependencies:
+  '@types/geojson': 7946.0.10
   '@types/node': 18.7.23
   '@types/nprogress': 0.2.0
   '@typescript-eslint/eslint-plugin': 5.38.1_qatzzi2vqzjqg2tq57nszrvcfi
@@ -155,6 +157,10 @@ packages:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.13.0
+    dev: true
+
+  /@types/geojson/7946.0.10:
+    resolution: {integrity: sha512-Nmh0K3iWQJzniTuPRcJn5hxXkfB1T1pgB89SBig5PlJQU5yocazeu4jATJlaA0GYFKWMqDdvYemoSnF2pXgLVA==}
     dev: true
 
   /@types/json-schema/7.0.11:

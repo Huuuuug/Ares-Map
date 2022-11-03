@@ -30,8 +30,8 @@ export interface AresMapOption {
 export class AresMap {
   private _option: AresMapOption = {
     show: true,
-    center: [120, 30],
-    zoom: 7,
+    center: [118, 29.2],
+    zoom: 8,
     zoomDelta: 0.5,
     zoomDuring: 300,
     minZoomLevel: 3,
@@ -177,10 +177,18 @@ export class AresMap {
       this.elements.forEach((ele: BasicElement) => ele.onMove())
     }
   }
+  /**
+   * 鼠标按键抬起取消鼠标移动监听与鼠标抬起监听
+   */
   handleMouseUp() {
     document.removeEventListener('mousemove', this.handleMouseMove)
     document.removeEventListener('mouseup', this.handleMouseUp)
   }
+  /**
+   * 鼠标滚轮设置地图缩放等级
+   * @param e
+   * @returns
+   */
   handleMouseWheel(e: ElementEvent) {
     let delta = e.wheelDelta * this._option.zoomDelta
     const { zoom } = this
@@ -205,5 +213,6 @@ export class AresMap {
           e.onZoomEnd && e.onZoomEnd()
         })
       })
+    e.event.preventDefault()
   }
 }

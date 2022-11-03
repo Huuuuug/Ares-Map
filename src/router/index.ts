@@ -10,6 +10,11 @@ const routes: RouteRecordRaw[] = [
     name: 'Index',
     component: () => import('@/view/Index.vue'),
   },
+  {
+    path: '/zrenderTest',
+    name: 'ZrenderTest',
+    component: () => import('@/view/zrenderTest/Index.vue'),
+  },
 ]
 
 const router = createRouter({
